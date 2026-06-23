@@ -50,12 +50,18 @@ func Write(rootDir, docsDir string, proxies []model.Proxy, generatedAt string) e
 	}
 
 	// all_proxies.txt — reference-compatible flat list, fastest first.
+	// Written to the repo root (canonical raw URL) and copied into docs/ so the
+	// static site can link to it from its own origin.
 	var b strings.Builder
 	for _, p := range sorted {
 		b.WriteString(p.HTTPSLink())
 		b.WriteByte('\n')
 	}
-	if err := os.WriteFile(filepath.Join(rootDir, "all_proxies.txt"), []byte(b.String()), 0o644); err != nil {
+	allTxt := []byte(b.String())
+	if err := os.WriteFile(filepath.Join(rootDir, "all_proxies.txt"), allTxt, 0o644); err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(docsDir, "all_proxies.txt"), allTxt, 0o644); err != nil {
 		return err
 	}
 

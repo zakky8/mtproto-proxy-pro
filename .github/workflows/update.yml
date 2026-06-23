@@ -28,7 +28,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-          cache: true
+          cache: false   # no module dependencies (no go.sum) — nothing to cache
 
       - name: Cache GeoIP dataset
         uses: actions/cache@v4
