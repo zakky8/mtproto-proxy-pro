@@ -1,4 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" rx="14" fill="#229ed9"/>
-  <path fill="#fff" d="M52 16.5 46.8 47c-.4 1.8-1.5 2.2-3 1.4l-8.1-6-3.9 3.8c-.43.43-.8.8-1.63.8l.58-8.25L46.6 23.3c.66-.58-.15-.9-1.03-.33L25.5 35.4l-8-2.5c-1.7-.54-1.76-1.7.37-2.56L49.9 16.45c1.45-.54 2.72.33 2.1 2.05z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2AABEE"/>
+      <stop offset="1" stop-color="#229ED9"/>
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="256" fill="url(#tg)"/>
+  <path fill="#fff" transform="translate(56,44) scale(0.86)"
+    d="M446.7 98.6l-67.6 318.8c-5.1 22.5-18.4 28.1-37.3 17.5l-103-75.9-49.7 47.8c-5.5 5.5-10.1 10.1-20.7 10.1l7.4-104.9 190.9-172.5c8.3-7.4-1.8-11.5-12.9-4.1L117.8 284 16.2 252.2c-22.1-6.9-22.5-22.1 4.6-32.7L418.2 66.4c18.4-6.8 34.5 4.4 28.5 32.2z"/>
 </svg>

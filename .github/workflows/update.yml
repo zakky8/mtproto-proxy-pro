@@ -58,11 +58,17 @@ jobs:
             count="$(grep -c . all_proxies.txt || echo 0)"
             git commit -m "chore: refresh proxy list (${count} verified) [skip ci]"
             # The reach pass can take ~20 min; main may have advanced meanwhile.
-            # Rebase onto the latest and retry so a concurrent push doesn't fail the run.
-            for attempt in 1 2 3; do
-              if git pull --rebase --autostash origin main && git push; then
-                echo "pushed on attempt ${attempt}"; break
+            # Rebase onto the latest, preferring our freshly-generated data on any
+            # conflict, and retry with backoff so a concurrent push can't fail the run.
+            pushed=false
+            for attempt in 1 2 3 4 5; do
+              git fetch origin main
+              if git rebase -X theirs origin/main; then
+                if git push origin main; then pushed=true; echo "pushed on attempt ${attempt}"; break; fi
+              else
+                git rebase --abort || true
               fi
-              echo "push attempt ${attempt} rejected; refetching..."; sleep 5
+              echo "push attempt ${attempt} failed; retrying..."; sleep $((attempt * 5))
             done
+            if [ "$pushed" != true ]; then echo "::error::could not push refreshed lists after retries"; exit 1; fi
           fi
