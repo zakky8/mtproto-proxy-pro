@@ -1,1 +1,2 @@
 https://t.me/proxy?port=443&secret=ee2111222233334444555566667777888862726f777365722e79616e6465782e636f6d&server=random.52.mtproto.ru
+https://t.me/proxy?port=443&secret=dd398e9112420ca2ad72bac8bfd851ff42&server=tg.proxywing.net
