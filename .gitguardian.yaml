@@ -1,0 +1,24 @@
+# GitGuardian configuration — https://docs.gitguardian.com/ggshield-docs/configuration
+#
+# This repository INTENTIONALLY publishes public Telegram MTProto proxy secrets.
+# Every `tg://proxy?secret=...` / `https://t.me/proxy?...secret=...` link contains a
+# high-entropy hex string, which secret scanners flag as a "Generic High Entropy
+# Secret". These are NOT credentials — they are public proxy parameters, and
+# distributing them is the entire purpose of the project. The generated lists are
+# refreshed every 6 hours, so new high-entropy values appear continuously by design.
+#
+# We exclude only the generated proxy-data files from secret scanning, so genuine
+# leaks elsewhere (code, configs, docs) are still detected.
+version: 2
+
+secret:
+  ignored_paths:
+    - 'all_proxies.txt'
+    - 'censorship_resistant.txt'
+    - 'sorted_by_latency.txt'
+    - 'proxies.json'
+    - 'by_country/**'
+    - 'docs/all_proxies.txt'
+    - 'docs/censorship_resistant.txt'
+    - 'docs/proxies.json'
+    - '.state/**'
