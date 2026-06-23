@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zakky8/tg-proxy-list/internal/model"
-	"github.com/zakky8/tg-proxy-list/internal/parse"
+	"github.com/zakky8/mtproto-proxy-pro/internal/model"
+	"github.com/zakky8/mtproto-proxy-pro/internal/parse"
 )
 
 // DefaultSources are public, community-maintained MTProto proxy feeds. Used when no
@@ -97,7 +97,7 @@ func fetch(ctx context.Context, client *http.Client, url string) ([]model.Proxy,
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "tg-proxy-list/1.0 (+https://github.com/zakky8/tg-proxy-list)")
+	req.Header.Set("User-Agent", "mtproto-proxy-pro/1.0 (+https://github.com/zakky8/mtproto-proxy-pro)")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err

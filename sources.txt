@@ -1,4 +1,4 @@
-# tg-proxy-list source feeds — one URL per line, '#' for comments.
+# mtproto-proxy-pro source feeds — one URL per line, '#' for comments.
 # These are public, community-maintained MTProto proxy lists. Edit freely;
 # the collector fetches every URL, parses any supported format, and dedupes.
 # Verified live on 2026-06-23.

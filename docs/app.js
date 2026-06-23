@@ -1,4 +1,5 @@
-/* tg-proxy-list — loads proxies.json and renders a searchable, sortable proxy list. */
+/* mtproto-proxy-pro — loads proxies.json and renders a searchable, sortable proxy list,
+   with extra help for users in countries that block Telegram. */
 (() => {
   "use strict";
 
@@ -10,10 +11,18 @@
   const searchEl = $("#search");
   const countryEl = $("#country");
   const sortEl = $("#sort");
-  const hsOnlyEl = $("#hsonly");
+  const resistEl = $("#resistonly");
   const toastEl = $("#toast");
+  const bannerEl = $("#banner");
+  const bannerTextEl = $("#banner-text");
 
   let ALL = [];
+
+  // Countries that actively block/throttle Telegram (2026). Used for the banner.
+  const CENSORED = {
+    IR: "Iran", RU: "Russia", CN: "China", TM: "Turkmenistan", VN: "Vietnam",
+    VE: "Venezuela", PK: "Pakistan", BY: "Belarus", UZ: "Uzbekistan", MM: "Myanmar",
+  };
 
   const COUNTRY_NAMES = new Intl.DisplayNames(["en"], { type: "region" });
 
@@ -45,10 +54,30 @@
     return Math.round(h / 24) + "d ago";
   }
 
+  // tg:// scheme opens the Telegram app directly — more reliable on mobile than
+  // the https://t.me link, which some browsers render as a web page instead.
+  function tgHref(p) {
+    return `tg://proxy?server=${encodeURIComponent(p.server)}&port=${p.port}&secret=${encodeURIComponent(p.secret)}`;
+  }
+
+  // Mirror of model.IsCensorshipResistant: proven reachable from a censored
+  // network, or structurally resistant (FakeTLS on 443 with a real SNI domain).
+  function isResistant(p) {
+    if (p.reachable_from && p.reachable_from.length) return true;
+    return p.type === "ee" && p.port === 443 && (p.secret || "").length > 34;
+  }
+  function resilienceTier(score) {
+    if (score >= 75) return { cls: "res--high", label: "High" };
+    if (score >= 50) return { cls: "res--mid", label: "Med" };
+    return { cls: "res--low", label: "Low" };
+  }
+
   function fillStats(data) {
-    const hs = data.proxies.filter((p) => p.status === "handshake_ok").length;
     $('[data-stat="count"]').textContent = data.count.toLocaleString();
-    $('[data-stat="handshake"]').textContent = hs.toLocaleString();
+    const resistant = typeof data.censorship_resistant === "number"
+      ? data.censorship_resistant
+      : data.proxies.filter(isResistant).length;
+    $('[data-stat="resistant"]').textContent = resistant.toLocaleString();
     $('[data-stat="countries"]').textContent = Object.keys(data.countries || {}).filter((c) => c !== "??").length;
     const upd = $('[data-stat="updated"]');
     upd.textContent = relTime(data.generated_at_utc);
@@ -67,23 +96,31 @@
     }
   }
 
+  function reachChips(p) {
+    if (!p.reachable_from || !p.reachable_from.length) return "";
+    return ' ' + p.reachable_from.map((cc) =>
+      `<span class="reach-chip" title="Tested reachable from inside ${esc(countryName(cc))}">${flag(cc)} ${esc(cc)}</span>`
+    ).join(" ");
+  }
+
   function rowHTML(p) {
     const name = countryName(p.country);
     const typeLabel = { ee: "FakeTLS", dd: "Secure", plain: "Basic" }[p.type] || p.type;
     const statusLabel = p.status === "handshake_ok"
       ? '<span class="status-tag">● handshake</span>'
       : '<span class="status-tag status-tag--reach">● reachable</span>';
+    const tier = resilienceTier(p.resilience || 0);
     return `<tr>
       <td class="col-country" data-label="Country"><span class="td-country"><span class="flag" aria-hidden="true">${flag(p.country)}</span><span>${esc(name)}</span><span class="cc">${esc(p.country)}</span></span></td>
-      <td class="col-server" data-label="Server"><span class="server">${esc(p.server)}<span class="port">:${p.port}</span></span><br>${statusLabel}</td>
-      <td class="col-type" data-label="Type"><span class="badge badge--${esc(p.type)}">${esc(typeLabel)}</span></td>
+      <td class="col-server" data-label="Server"><span class="server">${esc(p.server)}<span class="port">:${p.port}</span></span><br>${statusLabel}${reachChips(p)}</td>
+      <td class="col-type" data-label="Type"><span class="badge badge--${esc(p.type)}">${esc(typeLabel)}</span> <span class="badge res ${tier.cls}" title="Censorship-resistance score ${p.resilience || 0}/100">🛡 ${tier.label}</span></td>
       <td class="col-num" data-label="Latency"><span class="lat ${latClass(p.latency_ms)}">${p.latency_ms} ms</span></td>
       <td class="col-num" data-label="Uptime"><span class="uptime">${p.uptime_pct ?? 0}%</span></td>
       <td class="col-actions" data-label="Connect"><div class="actions">
         <button class="btn btn--icon" type="button" data-copy="${esc(p.link)}" aria-label="Copy proxy link for ${esc(p.server)}" title="Copy link">
           <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 9h10v10H9zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
         </button>
-        <a class="btn btn--go" href="${esc(p.link)}" rel="noopener" aria-label="Connect to ${esc(p.server)} in Telegram">Connect</a>
+        <a class="btn btn--go" href="${esc(tgHref(p))}" rel="noopener" aria-label="Connect to ${esc(p.server)} in Telegram">Connect</a>
       </div></td>
     </tr>`;
   }
@@ -91,23 +128,45 @@
   function applyFilters() {
     const q = searchEl.value.trim().toLowerCase();
     const cc = countryEl.value;
-    const hsOnly = hsOnlyEl.checked;
+    const resistOnly = resistEl.checked;
     const sort = sortEl.value;
 
     let list = ALL.filter((p) => {
       if (cc && p.country !== cc) return false;
-      if (hsOnly && p.status !== "handshake_ok") return false;
+      if (resistOnly && !isResistant(p)) return false;
       if (q && !(p.server.toLowerCase().includes(q) || countryName(p.country).toLowerCase().includes(q) || (p.country || "").toLowerCase().includes(q))) return false;
       return true;
     });
 
-    if (sort === "latency") list.sort((a, b) => a.latency_ms - b.latency_ms);
+    if (sort === "resilience") list.sort((a, b) => (b.resilience || 0) - (a.resilience || 0) || a.latency_ms - b.latency_ms);
+    else if (sort === "latency") list.sort((a, b) => a.latency_ms - b.latency_ms);
     else if (sort === "uptime") list.sort((a, b) => (b.uptime_pct ?? 0) - (a.uptime_pct ?? 0) || a.latency_ms - b.latency_ms);
     else if (sort === "country") list.sort((a, b) => countryName(a.country).localeCompare(countryName(b.country)) || a.latency_ms - b.latency_ms);
 
     rowsEl.innerHTML = list.map(rowHTML).join("");
     shownEl.textContent = list.length.toLocaleString();
     emptyEl.hidden = list.length !== 0;
+  }
+
+  // If the visitor is in a censored country, surface the resistant proxies up front.
+  function detectCountry() {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 4000);
+    fetch("https://api.country.is/", { signal: ctrl.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        clearTimeout(t);
+        const cc = d && d.country;
+        if (!cc || !CENSORED[cc]) return;
+        const reachable = ALL.some((p) => (p.reachable_from || []).includes(cc));
+        bannerTextEl.innerHTML = `Telegram is restricted in <strong>${esc(CENSORED[cc])}</strong>. Showing <strong>censorship-resistant FakeTLS proxies</strong>`
+          + (reachable ? ` tested reachable from inside ${esc(CENSORED[cc])} ${flag(cc)}.` : ` (disguised as HTTPS on port 443).`);
+        bannerEl.hidden = false;
+        resistEl.checked = true;
+        sortEl.value = "resilience";
+        applyFilters();
+      })
+      .catch(() => clearTimeout(t));
   }
 
   function debounce(fn, ms) {
@@ -134,7 +193,6 @@
       await navigator.clipboard.writeText(link);
       showToast("Proxy link copied");
     } catch {
-      // Fallback for non-secure contexts
       const ta = document.createElement("textarea");
       ta.value = link; document.body.appendChild(ta); ta.select();
       try { document.execCommand("copy"); showToast("Proxy link copied"); } catch { showToast("Copy failed — long-press to copy"); }
@@ -145,7 +203,7 @@
   searchEl.addEventListener("input", debounce(applyFilters, 120));
   countryEl.addEventListener("change", applyFilters);
   sortEl.addEventListener("change", applyFilters);
-  hsOnlyEl.addEventListener("change", applyFilters);
+  resistEl.addEventListener("change", applyFilters);
 
   fetch("proxies.json", { cache: "no-store" })
     .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
@@ -155,6 +213,7 @@
       fillStats(data);
       fillCountryFilter(data);
       applyFilters();
+      detectCountry();
     })
     .catch((err) => {
       loadingEl.textContent = "Could not load the proxy list. Try the raw .txt or JSON links above.";

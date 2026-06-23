@@ -39,8 +39,8 @@ jobs:
       - name: Build
         run: go build -o tgproxy ./cmd/tgproxy
 
-      - name: Collect, verify & publish
-        run: ./tgproxy --concurrency 250 --timeout 6s
+      - name: Collect, verify & publish (+ in-country reachability testing)
+        run: ./tgproxy --concurrency 250 --timeout 6s --reach --reach-sample 60
 
       - name: Refresh sitemap lastmod
         run: |

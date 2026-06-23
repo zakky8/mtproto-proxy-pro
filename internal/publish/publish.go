@@ -10,15 +10,17 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/zakky8/tg-proxy-list/internal/model"
+	"github.com/zakky8/mtproto-proxy-pro/internal/model"
 )
 
 // Dataset is the JSON document consumed by the website and any API client.
 type Dataset struct {
-	GeneratedAtUTC string         `json:"generated_at_utc"`
-	Count          int            `json:"count"`
-	Countries      map[string]int `json:"countries"`
-	Proxies        []model.Proxy  `json:"proxies"`
+	GeneratedAtUTC      string         `json:"generated_at_utc"`
+	Count               int            `json:"count"`
+	CensorshipResistant int            `json:"censorship_resistant"`
+	ReachableFrom       map[string]int `json:"reachable_from"` // censored CC -> count proven reachable
+	Countries           map[string]int `json:"countries"`
+	Proxies             []model.Proxy  `json:"proxies"`
 }
 
 // Write emits all output files. rootDir holds the canonical lists; docsDir gets a
@@ -27,15 +29,25 @@ func Write(rootDir, docsDir string, proxies []model.Proxy, generatedAt string) e
 	sorted := model.SortByLatency(proxies)
 
 	countries := map[string]int{}
+	reachableFrom := map[string]int{}
+	resistantCount := 0
 	for _, p := range sorted {
 		countries[p.Country]++
+		if p.IsCensorshipResistant() {
+			resistantCount++
+		}
+		for _, cc := range p.ReachableFrom {
+			reachableFrom[cc]++
+		}
 	}
 
 	ds := Dataset{
-		GeneratedAtUTC: generatedAt,
-		Count:          len(sorted),
-		Countries:      countries,
-		Proxies:        sorted,
+		GeneratedAtUTC:      generatedAt,
+		Count:               len(sorted),
+		CensorshipResistant: resistantCount,
+		ReachableFrom:       reachableFrom,
+		Countries:           countries,
+		Proxies:             sorted,
 	}
 
 	// proxies.json (root + docs copy)
@@ -77,6 +89,29 @@ func Write(rootDir, docsDir string, proxies []model.Proxy, generatedAt string) e
 
 	// by_country/<CC>.txt
 	if err := writeByCountry(filepath.Join(rootDir, "by_country"), sorted); err != nil {
+		return err
+	}
+
+	// censorship_resistant.txt — FakeTLS/443/in-country-reachable, most resistant first.
+	var resistant []model.Proxy
+	for _, p := range sorted {
+		if p.IsCensorshipResistant() {
+			resistant = append(resistant, p)
+		}
+	}
+	resistant = model.SortByResilience(resistant)
+	var rb strings.Builder
+	rb.WriteString("# Censorship-resistant Telegram proxies (FakeTLS on 443, most resistant first).\n")
+	rb.WriteString("# Best choice in countries that block Telegram. See README for per-country notes.\n")
+	for _, p := range resistant {
+		rb.WriteString(p.HTTPSLink())
+		rb.WriteByte('\n')
+	}
+	resTxt := []byte(rb.String())
+	if err := os.WriteFile(filepath.Join(rootDir, "censorship_resistant.txt"), resTxt, 0o644); err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(docsDir, "censorship_resistant.txt"), resTxt, 0o644); err != nil {
 		return err
 	}
 	return nil

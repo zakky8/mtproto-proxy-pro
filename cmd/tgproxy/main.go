@@ -13,15 +13,17 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"sort"
 	"time"
 
-	"github.com/zakky8/tg-proxy-list/internal/geo"
-	"github.com/zakky8/tg-proxy-list/internal/model"
-	"github.com/zakky8/tg-proxy-list/internal/publish"
-	"github.com/zakky8/tg-proxy-list/internal/source"
-	"github.com/zakky8/tg-proxy-list/internal/verify"
+	"github.com/zakky8/mtproto-proxy-pro/internal/geo"
+	"github.com/zakky8/mtproto-proxy-pro/internal/model"
+	"github.com/zakky8/mtproto-proxy-pro/internal/publish"
+	"github.com/zakky8/mtproto-proxy-pro/internal/reach"
+	"github.com/zakky8/mtproto-proxy-pro/internal/source"
+	"github.com/zakky8/mtproto-proxy-pro/internal/verify"
 )
 
 func main() {
@@ -35,15 +37,34 @@ func main() {
 		timeout     = flag.Duration("timeout", 6*time.Second, "per-proxy verification timeout")
 		limit       = flag.Int("limit", 0, "cap candidates (0 = no cap; useful for quick local runs)")
 		minHandshake = flag.Bool("handshake-only", false, "publish only proxies that passed a protocol handshake")
+		reachOn      = flag.Bool("reach", false, "test top FakeTLS proxies for reachability from inside censored countries (check-host.net)")
+		reachSample  = flag.Int("reach-sample", 80, "how many top FakeTLS proxies to in-country test when --reach is set")
 	)
 	flag.Parse()
 
-	if err := run(*sourcesPath, *outDir, *docsDir, *geoPath, *statePath, *concurrency, *timeout, *limit, *minHandshake); err != nil {
+	cfg := config{
+		sourcesPath: *sourcesPath, outDir: *outDir, docsDir: *docsDir, geoPath: *geoPath,
+		statePath: *statePath, concurrency: *concurrency, timeout: *timeout, limit: *limit,
+		handshakeOnly: *minHandshake, reachOn: *reachOn, reachSample: *reachSample,
+	}
+	if err := run(cfg); err != nil {
 		log.Fatalf("tgproxy: %v", err)
 	}
 }
 
-func run(sourcesPath, outDir, docsDir, geoPath, statePath string, concurrency int, timeout time.Duration, limit int, handshakeOnly bool) error {
+type config struct {
+	sourcesPath, outDir, docsDir, geoPath, statePath string
+	concurrency                                      int
+	timeout                                          time.Duration
+	limit                                            int
+	handshakeOnly                                    bool
+	reachOn                                          bool
+	reachSample                                      int
+}
+
+func run(cfg config) error {
+	sourcesPath, outDir, docsDir, geoPath, statePath := cfg.sourcesPath, cfg.outDir, cfg.docsDir, cfg.geoPath, cfg.statePath
+	concurrency, timeout, limit, handshakeOnly := cfg.concurrency, cfg.timeout, cfg.limit, cfg.handshakeOnly
 	ctx := context.Background()
 	now := time.Now().UTC().Format(time.RFC3339)
 
@@ -86,6 +107,7 @@ func run(sourcesPath, outDir, docsDir, geoPath, statePath string, concurrency in
 	// 4. Merge results, update history, build the verified set.
 	hist := publish.LoadHistory(statePath)
 	var verified []model.Proxy
+	ipByKey := map[string]net.IP{}
 	for i, p := range candidates {
 		r := res[i]
 		hist.Record(p.Key(), r.OK, now)
@@ -101,12 +123,24 @@ func run(sourcesPath, outDir, docsDir, geoPath, statePath string, concurrency in
 		p.Country = geoDB.LookupIP(r.IP)
 		p.UptimePct = hist.Pct(p.Key())
 		p.Link = p.HTTPSLink()
+		ipByKey[p.Key()] = r.IP
 		verified = append(verified, p)
 	}
 	log.Printf("verified OK: %d / %d (%.1f%%)", len(verified), len(candidates), pct(len(verified), len(candidates)))
 
 	if len(verified) == 0 {
 		return fmt.Errorf("no proxies passed verification")
+	}
+
+	// 4b. In-country reachability: test the most resistant proxies from inside
+	// censored networks (Iran/Russia/…). Best-effort and non-fatal.
+	if cfg.reachOn {
+		runReach(ctx, verified, ipByKey, cfg.reachSample)
+	}
+
+	// 4c. Resilience score for every proxy (after reach, so it counts).
+	for i := range verified {
+		verified[i].ComputeResilience()
 	}
 
 	// 5. Publish + persist state.
@@ -121,13 +155,60 @@ func run(sourcesPath, outDir, docsDir, geoPath, statePath string, concurrency in
 	return nil
 }
 
+// runReach tests the most censorship-resistant proxies (FakeTLS, fastest first)
+// for reachability from inside censored countries and records the result.
+func runReach(ctx context.Context, proxies []model.Proxy, ipByKey map[string]net.IP, sample int) {
+	var cands []model.Proxy
+	for _, p := range proxies {
+		if p.Type == model.TypeEE {
+			cands = append(cands, p)
+		}
+	}
+	cands = model.SortByLatency(cands)
+	if sample > 0 && len(cands) > sample {
+		cands = cands[:sample]
+	}
+
+	var targets []reach.Target
+	for _, p := range cands {
+		if ip := ipByKey[p.Key()]; ip != nil {
+			targets = append(targets, reach.Target{Key: p.Key(), IP: ip.String(), Port: p.Port})
+		}
+	}
+	if len(targets) == 0 {
+		return
+	}
+	log.Printf("reach: in-country testing %d FakeTLS proxies (rate-limited, may take ~%dm)...",
+		len(targets), len(targets)*17/60+1)
+
+	results := reach.Check(ctx, targets, reach.Options{Log: log.Printf})
+	byKey := map[string][]string{}
+	for _, r := range results {
+		if len(r.Reachable) > 0 {
+			byKey[r.Key] = r.Reachable
+		}
+	}
+	for i := range proxies {
+		if cc, ok := byKey[proxies[i].Key()]; ok {
+			proxies[i].ReachableFrom = cc
+		}
+	}
+}
+
 func printSummary(proxies []model.Proxy) {
 	byCountry := map[string]int{}
-	handshake := 0
+	handshake, resistant := 0, 0
+	reachBy := map[string]int{}
 	for _, p := range proxies {
 		byCountry[p.Country]++
 		if p.Status == model.StatusHandshakeOK {
 			handshake++
+		}
+		if p.IsCensorshipResistant() {
+			resistant++
+		}
+		for _, cc := range p.ReachableFrom {
+			reachBy[cc]++
 		}
 	}
 	type kv struct {
@@ -142,12 +223,19 @@ func printSummary(proxies []model.Proxy) {
 	if len(top) > 10 {
 		top = top[:10]
 	}
-	fmt.Fprintf(os.Stderr, "\npublished %d proxies (%d handshake_ok)\n", len(proxies), handshake)
+	fmt.Fprintf(os.Stderr, "\npublished %d proxies (%d handshake_ok, %d censorship-resistant)\n", len(proxies), handshake, resistant)
 	fmt.Fprintf(os.Stderr, "top countries: ")
 	for _, e := range top {
 		fmt.Fprintf(os.Stderr, "%s=%d ", e.cc, e.n)
 	}
 	fmt.Fprintln(os.Stderr)
+	if len(reachBy) > 0 {
+		fmt.Fprintf(os.Stderr, "reachable from inside: ")
+		for cc, n := range reachBy {
+			fmt.Fprintf(os.Stderr, "%s=%d ", cc, n)
+		}
+		fmt.Fprintln(os.Stderr)
+	}
 }
 
 func pct(a, b int) float64 {

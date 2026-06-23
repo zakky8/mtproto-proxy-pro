@@ -1,1 +1,1 @@
-https://t.me/proxy?port=443&secret=7ddff5ae9397b23386b64b4a52c82842&server=proxy.strettenvpn.com
+https://t.me/proxy?server=proxy.strettenvpn.com&port=443&secret=7ddff5ae9397b23386b64b4a52c82842

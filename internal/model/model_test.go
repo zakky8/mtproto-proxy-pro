@@ -43,6 +43,40 @@ func TestSortByLatency(t *testing.T) {
 	}
 }
 
+func TestResilienceAndResistance(t *testing.T) {
+	eeSecret := "ee" + "0123456789abcdef0123456789abcdef" + "6578616d706c652e636f6d" // ee + key + example.com
+	fakeTLS := Proxy{Server: "h", Port: 443, Secret: eeSecret, Type: TypeEE, Status: StatusHandshakeOK}
+	plain := Proxy{Server: "h", Port: 8080, Secret: "0123456789abcdef0123456789abcdef", Type: TypePlain, Status: StatusReachable}
+
+	fakeTLS.ComputeResilience()
+	plain.ComputeResilience()
+	if fakeTLS.Resilience <= plain.Resilience {
+		t.Fatalf("FakeTLS resilience %d should exceed plain %d", fakeTLS.Resilience, plain.Resilience)
+	}
+	if !fakeTLS.IsCensorshipResistant() {
+		t.Fatal("FakeTLS on 443 with SNI should be censorship-resistant")
+	}
+	if plain.IsCensorshipResistant() {
+		t.Fatal("plain proxy should not be censorship-resistant")
+	}
+
+	// In-country reachability raises both resilience and resistance.
+	reached := Proxy{Server: "h", Port: 8080, Secret: "dd0123456789abcdef", Type: TypeDD, ReachableFrom: []string{"IR", "RU"}}
+	reached.ComputeResilience()
+	if !reached.IsCensorshipResistant() {
+		t.Fatal("proxy reachable from censored countries must be resistant")
+	}
+}
+
+func TestIsCensored(t *testing.T) {
+	if !IsCensored("IR") || !IsCensored("RU") {
+		t.Fatal("IR/RU should be censored")
+	}
+	if IsCensored("DE") {
+		t.Fatal("DE should not be censored")
+	}
+}
+
 func TestValidate(t *testing.T) {
 	good := Proxy{Server: "h", Port: 443, Secret: "0123456789abcdef0123456789abcdef"}
 	if err := good.Validate(); err != nil {

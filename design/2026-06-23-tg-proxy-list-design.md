@@ -1,4 +1,4 @@
-# tg-proxy-list — Design Spec
+# mtproto-proxy-pro — Design Spec
 
 **Date:** 2026-06-23
 **Status:** Approved

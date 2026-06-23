@@ -34,6 +34,29 @@ type Proxy struct {
 	LastChecked string `json:"last_checked_utc"`
 	UptimePct   int    `json:"uptime_pct,omitempty"`
 	Link        string `json:"link"`
+
+	// ReachableFrom lists ISO-3166 codes of censored countries from which this
+	// proxy tested TCP-reachable (via in-country probes). Empty means untested
+	// from inside censored networks — NOT that it is blocked.
+	ReachableFrom []string `json:"reachable_from,omitempty"`
+	// Resilience is a 0-100 heuristic for how likely the proxy is to survive
+	// DPI-based censorship (FakeTLS on 443, valid SNI, in-country reachability).
+	Resilience int `json:"resilience"`
+}
+
+// CensoredCountries are the ISO codes we treat as actively blocking/throttling
+// Telegram (2026), used for in-country reachability testing and UI guidance.
+// Grounded in OONI/Access Now/Freedom House reporting (see docs).
+var CensoredCountries = []string{"IR", "RU", "CN", "TM", "VN", "VE", "PK", "BY", "UZ", "MM"}
+
+// IsCensored reports whether cc is in CensoredCountries.
+func IsCensored(cc string) bool {
+	for _, c := range CensoredCountries {
+		if c == cc {
+			return true
+		}
+	}
+	return false
 }
 
 // Key uniquely identifies a proxy for dedup purposes.
@@ -51,12 +74,14 @@ func (p Proxy) HTTPSLink() string {
 	return "https://t.me/proxy?" + p.query()
 }
 
+// query builds the proxy query string in the canonical server→port→secret order
+// that Telegram clients expect. The secret is hex (safe unescaped); only the host
+// is escaped. url.Values is intentionally avoided because it alphabetizes keys,
+// which some Telegram clients fail to parse.
 func (p Proxy) query() string {
-	v := url.Values{}
-	v.Set("server", p.Server)
-	v.Set("port", strconv.Itoa(p.Port))
-	v.Set("secret", p.Secret)
-	return v.Encode()
+	return "server=" + url.QueryEscape(p.Server) +
+		"&port=" + strconv.Itoa(p.Port) +
+		"&secret=" + p.Secret
 }
 
 // FakeTLSDomain decodes the SNI domain embedded in an ee (FakeTLS) secret, if present.
@@ -156,6 +181,56 @@ func isPlausibleDomain(d string) bool {
 		}
 	}
 	return true
+}
+
+// ComputeResilience sets Resilience from the proxy's type, port, SNI, status, and
+// observed in-country reachability. It is a heuristic, not a guarantee.
+func (p *Proxy) ComputeResilience() {
+	score := 0
+	switch p.Type {
+	case TypeEE:
+		score += 55 // FakeTLS — the only DPI-survivable mode
+	case TypeDD:
+		score += 25
+	default:
+		score += 8 // plain — fingerprinted by entropy analysis
+	}
+	if p.Type == TypeEE && p.FakeTLSDomain() != "" {
+		score += 15 // carries a real SNI to front behind
+	}
+	if p.Port == 443 {
+		score += 12 // blends with normal HTTPS
+	}
+	if p.Status == StatusHandshakeOK {
+		score += 8
+	}
+	score += len(p.ReachableFrom) * 6 // proven reachable from inside censored networks
+	if score > 100 {
+		score = 100
+	}
+	p.Resilience = score
+}
+
+// IsCensorshipResistant reports whether the proxy is a good candidate for
+// blocked countries: proven reachable from a censored network, or structurally
+// resistant (FakeTLS on 443 with a real SNI domain).
+func (p Proxy) IsCensorshipResistant() bool {
+	if len(p.ReachableFrom) > 0 {
+		return true
+	}
+	return p.Type == TypeEE && p.Port == 443 && p.FakeTLSDomain() != ""
+}
+
+// SortByResilience returns proxies ordered most-resilient first (latency breaks ties).
+func SortByResilience(in []Proxy) []Proxy {
+	out := append([]Proxy(nil), in...)
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].Resilience != out[j].Resilience {
+			return out[i].Resilience > out[j].Resilience
+		}
+		return out[i].LatencyMS < out[j].LatencyMS
+	})
+	return out
 }
 
 // SortByLatency returns proxies ordered fastest-first (handshake_ok preferred on ties).

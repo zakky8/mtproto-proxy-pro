@@ -17,7 +17,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/zakky8/tg-proxy-list/internal/model"
+	"github.com/zakky8/mtproto-proxy-pro/internal/model"
 )
 
 // Result is the outcome of verifying one proxy.

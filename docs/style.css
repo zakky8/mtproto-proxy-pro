@@ -1,4 +1,4 @@
-/* tg-proxy-list — OLED dark, Telegram-blue accent. Vanilla CSS, no framework. */
+/* mtproto-proxy-pro — OLED dark, Telegram-blue accent. Vanilla CSS, no framework. */
 :root {
   --bg: #0a0f1a;
   --surface: #111827;
@@ -137,6 +137,26 @@ details p { margin: 0 0 14px; color: var(--fg-dim); font-size: 14.5px; }
 /* ---------- Toast ---------- */
 .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--ok); color: #06210f; font-weight: 700; padding: 11px 20px; border-radius: 10px; box-shadow: var(--shadow); opacity: 0; transition: opacity .2s ease, transform .2s ease; z-index: 60; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- Blocked-country banner ---------- */
+.banner { display: flex; align-items: center; gap: 12px; background: linear-gradient(90deg, rgba(34,158,217,.16), rgba(34,197,94,.10)); border: 1px solid var(--brand); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; color: var(--fg); font-size: 14.5px; }
+.banner svg { color: var(--ok); flex: none; }
+
+/* ---------- Resilience + reachability badges ---------- */
+.toggle--shield { border-color: var(--ok); color: var(--fg); }
+.badge.res { margin-left: 4px; }
+.res--high { color: var(--ok); border-color: rgba(34,197,94,.4); background: rgba(34,197,94,.10); }
+.res--mid  { color: var(--warn); border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.10); }
+.res--low  { color: var(--fg-dim); }
+.reach-chip { display: inline-block; font-size: 11px; font-weight: 600; color: var(--ok); background: rgba(34,197,94,.10); border: 1px solid rgba(34,197,94,.35); border-radius: 999px; padding: 1px 7px; margin-top: 4px; }
+
+/* ---------- Country guidance table ---------- */
+.lead { color: var(--fg-dim); font-size: 15.5px; max-width: 760px; }
+.lead strong, .lead em { color: var(--fg); font-style: normal; }
+.lead .reach-chip { margin: 0; }
+.ctable-wrap { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-top: 8px; }
+.ctable td { font-size: 14px; }
+.ctable td:first-child { white-space: nowrap; font-weight: 600; }
 
 /* ---------- Responsive: table -> cards ---------- */
 @media (max-width: 720px) {

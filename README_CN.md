@@ -1,11 +1,11 @@
 <div align="center">
 
-# 🛰️ tg-proxy-list — 免费 Telegram 代理列表（已验证的 MTProto 代理）
+# 🛰️ mtproto-proxy-pro — 免费 Telegram 代理列表（已验证的 MTProto 代理）
 
 **新鲜、自动验证的 Telegram MTProto 代理 —— 经过连接测试、按速度排序、标注国家，每 6 小时更新一次。**
 一键连接。无需 App、无需注册、无广告。
 
-### 👉 **[打开列表并连接 →](https://zakky8.github.io/tg-proxy-list/)** 👈
+### 👉 **[打开列表并连接 →](https://zakky8.github.io/mtproto-proxy-pro/)** 👈
 
 [English](README.md) · [Русский](README_RU.md) · [فارسی](README_FA.md) · 中文
 
@@ -15,7 +15,7 @@
 
 ## 这是什么
 
-**tg-proxy-list 是一个免费、持续更新的公共 Telegram MTProto 代理列表。** 它能帮助你在 Telegram 被**屏蔽或限速**的地方使用它，无需安装任何东西。
+**mtproto-proxy-pro 是一个免费、持续更新的公共 Telegram MTProto 代理列表。** 它能帮助你在 Telegram 被**屏蔽或限速**的地方使用它，无需安装任何东西。
 
 与普通的代理列表不同，这里的每个代理在发布前都会**真正验证**：
 
@@ -29,7 +29,7 @@
 
 ## 快速开始
 
-- **网站：** [zakky8.github.io/tg-proxy-list](https://zakky8.github.io/tg-proxy-list/) —— 按国家筛选、按速度排序、点击 **Connect**。
+- **网站：** [zakky8.github.io/mtproto-proxy-pro](https://zakky8.github.io/mtproto-proxy-pro/) —— 按国家筛选、按速度排序、点击 **Connect**。
 - **列表：** 打开 [`all_proxies.txt`](all_proxies.txt)，在手机上点击任意 `https://t.me/proxy?...` 链接。
 - **按国家：** `by_country/CN.txt`、`by_country/IR.txt` 等。
 

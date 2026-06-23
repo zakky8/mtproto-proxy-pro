@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/zakky8/tg-proxy-list/internal/model"
+	"github.com/zakky8/mtproto-proxy-pro/internal/model"
 )
 
 // linkRe extracts proxy links embedded anywhere in a line.
@@ -37,6 +37,9 @@ func Line(line string) []model.Proxy {
 			return
 		}
 		p.Secret = strings.ToLower(strings.TrimSpace(p.Secret))
+		// Normalize the host: Telegram is picky about trailing dots and casing in
+		// deep links, and scraped lists often carry "Host.Example." verbatim.
+		p.Server = strings.ToLower(strings.TrimRight(strings.TrimSpace(p.Server), "."))
 		p.Type = model.ClassifySecret(p.Secret)
 		if p.Validate() != nil {
 			return

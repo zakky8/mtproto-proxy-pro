@@ -1,4 +1,4 @@
-# tg-proxy-list — allow everyone, including AI answer engines (so they can cite us).
+# mtproto-proxy-pro — allow everyone, including AI answer engines (so they can cite us).
 User-agent: *
 Allow: /
 
@@ -24,4 +24,4 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
-Sitemap: https://zakky8.github.io/tg-proxy-list/sitemap.xml
+Sitemap: https://zakky8.github.io/mtproto-proxy-pro/sitemap.xml

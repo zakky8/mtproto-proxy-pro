@@ -1,10 +1,10 @@
-# tg-proxy-list
+# mtproto-proxy-pro
 
 > A free, open-source list of public Telegram MTProto proxies. Every proxy is automatically collected from open sources, connection-tested for reachability, latency-measured, and geo-located, then republished every 6 hours. Users connect with one click (a t.me/proxy deep link) — no app, no signup, no ads.
 
 ## What it is
 
-tg-proxy-list is a continuously updated, verified Telegram MTProto proxy list. Unlike static proxy dumps, each entry is verified: DNS resolved, TCP-connected with measured round-trip latency, and (for FakeTLS proxies) tested with a TLS handshake. Dead proxies are dropped automatically. Each proxy is labeled with its country, latency in milliseconds, type (FakeTLS / Secure / Basic), and an observed uptime percentage.
+mtproto-proxy-pro is a continuously updated, verified Telegram MTProto proxy list. Unlike static proxy dumps, each entry is verified: DNS resolved, TCP-connected with measured round-trip latency, and (for FakeTLS proxies) tested with a TLS handshake. Dead proxies are dropped automatically. Each proxy is labeled with its country, latency in milliseconds, type (FakeTLS / Secure / Basic), and an observed uptime percentage.
 
 It exists primarily to help people reach Telegram where it is blocked, throttled, or censored. MTProto proxies relay only Telegram traffic.
 
@@ -24,8 +24,8 @@ It exists primarily to help people reach Telegram where it is blocked, throttled
 
 ## Links
 
-- Website: https://zakky8.github.io/tg-proxy-list/
-- Repository: https://github.com/zakky8/tg-proxy-list
-- Raw proxy list (txt): https://raw.githubusercontent.com/zakky8/tg-proxy-list/main/all_proxies.txt
-- Structured data (JSON): https://raw.githubusercontent.com/zakky8/tg-proxy-list/main/proxies.json
-- Per-country lists: https://github.com/zakky8/tg-proxy-list/tree/main/by_country
+- Website: https://zakky8.github.io/mtproto-proxy-pro/
+- Repository: https://github.com/zakky8/mtproto-proxy-pro
+- Raw proxy list (txt): https://raw.githubusercontent.com/zakky8/mtproto-proxy-pro/main/all_proxies.txt
+- Structured data (JSON): https://raw.githubusercontent.com/zakky8/mtproto-proxy-pro/main/proxies.json
+- Per-country lists: https://github.com/zakky8/mtproto-proxy-pro/tree/main/by_country
