@@ -32,7 +32,7 @@
 ## شروع سریع
 
 - **وب‌سایت:** [zakky8.github.io/mtproto-proxy-pro](https://zakky8.github.io/mtproto-proxy-pro/) — فیلتر بر اساس کشور، مرتب‌سازی بر اساس سرعت، دکمهٔ **Connect**.
-- **لیست:** فایل [`all_proxies.txt`](all_proxies.txt) را باز کنید و روی هر لینک `https://t.me/proxy?...` در گوشی بزنید.
+- **لیست:** فایل [`all_proxies.txt`](https://zakky8.github.io/mtproto-proxy-pro/all_proxies.txt) را باز کنید و روی هر لینک `https://t.me/proxy?...` در گوشی بزنید.
 - **کشور ایران:** [`by_country/IR.txt`](by_country/IR.txt)
 
 ## سلب مسئولیت

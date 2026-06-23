@@ -30,7 +30,7 @@
 ## Быстрый старт
 
 - **Сайт:** [zakky8.github.io/mtproto-proxy-pro](https://zakky8.github.io/mtproto-proxy-pro/) — фильтр по стране, сортировка по скорости, кнопка **Connect**.
-- **Список:** откройте [`all_proxies.txt`](all_proxies.txt) и нажмите любую ссылку `https://t.me/proxy?...` на телефоне.
+- **Список:** откройте [`all_proxies.txt`](https://zakky8.github.io/mtproto-proxy-pro/all_proxies.txt) и нажмите любую ссылку `https://t.me/proxy?...` на телефоне.
 - **Своя страна:** `by_country/RU.txt`, `by_country/IR.txt` и т. д.
 
 ## Дисклеймер

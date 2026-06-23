@@ -26,6 +26,6 @@ It exists primarily to help people reach Telegram where it is blocked, throttled
 
 - Website: https://zakky8.github.io/mtproto-proxy-pro/
 - Repository: https://github.com/zakky8/mtproto-proxy-pro
-- Raw proxy list (txt): https://raw.githubusercontent.com/zakky8/mtproto-proxy-pro/main/all_proxies.txt
-- Structured data (JSON): https://raw.githubusercontent.com/zakky8/mtproto-proxy-pro/main/proxies.json
+- Raw proxy list (txt): https://zakky8.github.io/mtproto-proxy-pro/all_proxies.txt
+- Structured data (JSON): https://zakky8.github.io/mtproto-proxy-pro/proxies.json
 - Per-country lists: https://github.com/zakky8/mtproto-proxy-pro/tree/main/by_country

@@ -30,7 +30,7 @@
 ## 快速开始
 
 - **网站：** [zakky8.github.io/mtproto-proxy-pro](https://zakky8.github.io/mtproto-proxy-pro/) —— 按国家筛选、按速度排序、点击 **Connect**。
-- **列表：** 打开 [`all_proxies.txt`](all_proxies.txt)，在手机上点击任意 `https://t.me/proxy?...` 链接。
+- **列表：** 打开 [`all_proxies.txt`](https://zakky8.github.io/mtproto-proxy-pro/all_proxies.txt)，在手机上点击任意 `https://t.me/proxy?...` 链接。
 - **按国家：** `by_country/CN.txt`、`by_country/IR.txt` 等。
 
 ## 免责声明

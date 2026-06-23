@@ -1,34 +1,47 @@
 name: Update proxies
 
+# Builds the verified proxy lists and DEPLOYS them straight to GitHub Pages as an
+# artifact. The lists are never committed to git, so the high-entropy proxy secrets
+# (public Telegram proxy parameters, not credentials) never enter the repository and
+# secret scanners have nothing to flag. This also removes the auto-commit push that
+# could race and fail.
+
 on:
   schedule:
-    - cron: "17 */6 * * *"   # every 6 hours
-  workflow_dispatch:           # manual run button
+    - cron: "17 */6 * * *" # every 6 hours
+  workflow_dispatch: # manual run button
   push:
     branches: [main]
-    paths:                     # rebuild lists when the engine or sources change
+    paths: # redeploy when the engine, sources, or static site change
       - "cmd/**"
       - "internal/**"
       - "sources.txt"
+      - "docs/**"
       - ".github/workflows/update.yml"
 
+# No contents:write needed — nothing is committed back to the repo.
 permissions:
-  contents: write              # commit refreshed lists back to the repo
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: update-proxies
+  group: pages
   cancel-in-progress: false
 
 jobs:
-  refresh:
+  build-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-          cache: false   # no module dependencies (no go.sum) — nothing to cache
+          cache: false # no module dependencies (no go.sum)
 
       - name: Cache GeoIP dataset
         uses: actions/cache@v4
@@ -36,39 +49,31 @@ jobs:
           path: data
           key: geoip-dbip-country-v1
 
+      - name: Restore uptime history
+        uses: actions/cache@v4
+        with:
+          path: .state
+          key: uptime-state-${{ github.run_id }}
+          restore-keys: |
+            uptime-state-
+
       - name: Build
         run: go build -o tgproxy ./cmd/tgproxy
 
-      - name: Collect, verify & publish (+ in-country reachability testing)
-        run: ./tgproxy --concurrency 250 --timeout 6s --reach --reach-sample 60
+      - name: Generate lists (+ in-country reachability)
+        run: ./tgproxy --concurrency 250 --timeout 6s --reach --reach-sample 60 --out docs --docs docs
 
       - name: Refresh sitemap lastmod
         run: |
           today="$(date -u +%F)"
           sed -i -E "s#<lastmod>[^<]*</lastmod>#<lastmod>${today}</lastmod>#" docs/sitemap.xml
 
-      - name: Commit refreshed lists
-        run: |
-          git config user.name  "mtproto-proxy-bot"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
-            count="$(grep -c . all_proxies.txt || echo 0)"
-            git commit -m "chore: refresh proxy list (${count} verified) [skip ci]"
-            # The reach pass can take ~20 min; main may have advanced meanwhile.
-            # Rebase onto the latest, preferring our freshly-generated data on any
-            # conflict, and retry with backoff so a concurrent push can't fail the run.
-            pushed=false
-            for attempt in 1 2 3 4 5; do
-              git fetch origin main
-              if git rebase -X theirs origin/main; then
-                if git push origin main; then pushed=true; echo "pushed on attempt ${attempt}"; break; fi
-              else
-                git rebase --abort || true
-              fi
-              echo "push attempt ${attempt} failed; retrying..."; sleep $((attempt * 5))
-            done
-            if [ "$pushed" != true ]; then echo "::error::could not push refreshed lists after retries"; exit 1; fi
-          fi
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

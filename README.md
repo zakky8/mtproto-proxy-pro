@@ -5,8 +5,8 @@
 **Fresh, auto-verified [Telegram](https://telegram.org) MTProto proxies — connection-tested, latency-ranked, geo-located, and updated every 6 hours.**
 One click to connect. No app, no signup, no ads.
 
-[![Verified proxies](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzakky8%2Fmtproto-proxy-pro%2Fmain%2Fproxies.json&query=%24.count&label=verified%20proxies&color=22c55e&style=for-the-badge)](https://zakky8.github.io/mtproto-proxy-pro/)
-[![Last updated](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzakky8%2Fmtproto-proxy-pro%2Fmain%2Fproxies.json&query=%24.generated_at_utc&label=updated&color=229ed9&style=for-the-badge)](https://zakky8.github.io/mtproto-proxy-pro/)
+[![Verified proxies](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fzakky8.github.io%2Fmtproto-proxy-pro%2Fproxies.json&query=%24.count&label=verified%20proxies&color=22c55e&style=for-the-badge)](https://zakky8.github.io/mtproto-proxy-pro/)
+[![Last updated](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fzakky8.github.io%2Fmtproto-proxy-pro%2Fproxies.json&query=%24.generated_at_utc&label=updated&color=229ed9&style=for-the-badge)](https://zakky8.github.io/mtproto-proxy-pro/)
 [![Update proxies](https://github.com/zakky8/mtproto-proxy-pro/actions/workflows/update.yml/badge.svg)](https://github.com/zakky8/mtproto-proxy-pro/actions/workflows/update.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
@@ -40,36 +40,36 @@ Unlike most "free proxy" dumps, every proxy here is **actually verified** before
 **[zakky8.github.io/mtproto-proxy-pro](https://zakky8.github.io/mtproto-proxy-pro/)** → search/filter by country, sort by speed, tap **Connect**. Telegram opens and asks to enable the proxy. Done.
 
 ### From the raw list
-Open **[`all_proxies.txt`](all_proxies.txt)** and tap any `https://t.me/proxy?...` link on your phone — Telegram handles the rest.
+Open **[`all_proxies.txt`](https://zakky8.github.io/mtproto-proxy-pro/all_proxies.txt)** and tap any `https://t.me/proxy?...` link on your phone — Telegram handles the rest.
 
 ### Subscribe (always-fresh raw URLs)
 ```
 # All proxies, fastest first (one t.me link per line)
-https://raw.githubusercontent.com/zakky8/mtproto-proxy-pro/main/all_proxies.txt
+https://zakky8.github.io/mtproto-proxy-pro/all_proxies.txt
 
 # Structured data (country, latency, type, uptime, status)
-https://raw.githubusercontent.com/zakky8/mtproto-proxy-pro/main/proxies.json
+https://zakky8.github.io/mtproto-proxy-pro/proxies.json
 
 # Just your country, e.g. Iran / Russia / Germany
-https://raw.githubusercontent.com/zakky8/mtproto-proxy-pro/main/by_country/IR.txt
+https://zakky8.github.io/mtproto-proxy-pro/by_country/IR.txt
 
 # Censorship-resistant only (FakeTLS on 443, most resistant first) — best in blocked countries
-https://raw.githubusercontent.com/zakky8/mtproto-proxy-pro/main/censorship_resistant.txt
+https://zakky8.github.io/mtproto-proxy-pro/censorship_resistant.txt
 ```
 
 ## Output formats
 
 | File | What it is |
 |------|------------|
-| [`all_proxies.txt`](all_proxies.txt) | Flat list of `https://t.me/proxy?...` links, fastest first |
-| [`proxies.json`](proxies.json) | Structured records: `server, port, secret, type, country, latency_ms, status, uptime_pct, resilience, reachable_from, last_checked_utc` |
-| [`censorship_resistant.txt`](censorship_resistant.txt) | FakeTLS-on-443 proxies, most resistant first — **the list to use in blocked countries** |
-| [`sorted_by_latency.txt`](sorted_by_latency.txt) | Human-readable table (latency · country · status · link) |
-| [`by_country/`](by_country/) | One `.txt` per country (`IR.txt`, `RU.txt`, `DE.txt`, …) |
+| [`all_proxies.txt`](https://zakky8.github.io/mtproto-proxy-pro/all_proxies.txt) | Flat list of `https://t.me/proxy?...` links, fastest first |
+| [`proxies.json`](https://zakky8.github.io/mtproto-proxy-pro/proxies.json) | Structured records: `server, port, secret, type, country, latency_ms, status, uptime_pct, resilience, reachable_from, last_checked_utc` |
+| [`censorship_resistant.txt`](https://zakky8.github.io/mtproto-proxy-pro/censorship_resistant.txt) | FakeTLS-on-443 proxies, most resistant first — **the list to use in blocked countries** |
+| [`sorted_by_latency.txt`](https://zakky8.github.io/mtproto-proxy-pro/sorted_by_latency.txt) | Human-readable table (latency · country · status · link) |
+| [`by_country/`](https://zakky8.github.io/mtproto-proxy-pro/by_country/IR.txt) | One `.txt` per country (`IR.txt`, `RU.txt`, `DE.txt`, …) |
 
 ## Does it work where Telegram is blocked?
 
-Short answer: **use the FakeTLS proxies** (the [`censorship_resistant.txt`](censorship_resistant.txt) list, or tap **🛡 Works in blocked countries** on the site). They disguise themselves as ordinary HTTPS on port 443, which is what survives deep-packet inspection (DPI). `plain` and `dd` proxies are fingerprinted and dropped by censors.
+Short answer: **use the FakeTLS proxies** (the [`censorship_resistant.txt`](https://zakky8.github.io/mtproto-proxy-pro/censorship_resistant.txt) list, or tap **🛡 Works in blocked countries** on the site). They disguise themselves as ordinary HTTPS on port 443, which is what survives deep-packet inspection (DPI). `plain` and `dd` proxies are fingerprinted and dropped by censors.
 
 We also TCP-test the top FakeTLS proxies **from probes physically located inside censored countries** (via the [check-host.net](https://check-host.net) network). A `reachable_from` value like `["IR","RU"]` means the proxy answered **from inside Iran and Russia** — not just from our servers. A missing value means *not tested*, **not** *blocked*.
 

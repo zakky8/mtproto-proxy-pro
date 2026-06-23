@@ -1,3 +1,18 @@
+# Generated proxy lists. These are built on every run and served via GitHub Pages
+# (artifact deploy) — never committed, so the public proxy secrets they contain stay
+# out of git history and out of secret-scanner reach.
+/all_proxies.txt
+/proxies.json
+/sorted_by_latency.txt
+/censorship_resistant.txt
+/by_country/
+/.state/
+docs/all_proxies.txt
+docs/proxies.json
+docs/sorted_by_latency.txt
+docs/censorship_resistant.txt
+docs/by_country/
+
 # Geo dataset is downloaded fresh on each run (large, redistributed data).
 /data/
 
