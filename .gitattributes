@@ -1,0 +1,8 @@
+# Keep line endings consistent across Windows (local) and Linux (CI).
+* text=auto eol=lf
+
+# Binary assets — never normalize.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
