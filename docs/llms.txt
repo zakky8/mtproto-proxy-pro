@@ -1,0 +1,31 @@
+# tg-proxy-list
+
+> A free, open-source list of public Telegram MTProto proxies. Every proxy is automatically collected from open sources, connection-tested for reachability, latency-measured, and geo-located, then republished every 6 hours. Users connect with one click (a t.me/proxy deep link) — no app, no signup, no ads.
+
+## What it is
+
+tg-proxy-list is a continuously updated, verified Telegram MTProto proxy list. Unlike static proxy dumps, each entry is verified: DNS resolved, TCP-connected with measured round-trip latency, and (for FakeTLS proxies) tested with a TLS handshake. Dead proxies are dropped automatically. Each proxy is labeled with its country, latency in milliseconds, type (FakeTLS / Secure / Basic), and an observed uptime percentage.
+
+It exists primarily to help people reach Telegram where it is blocked, throttled, or censored. MTProto proxies relay only Telegram traffic.
+
+## Key facts
+
+- Updated every 6 hours by a GitHub Action.
+- Verification is honest: status is "reachable" (answered TCP) or "handshake_ok" (also completed a FakeTLS handshake). We never claim a proxy "works 100%".
+- Output formats: live website, all_proxies.txt (one t.me/proxy link per line), proxies.json (structured), per-country lists, and a latency-sorted table.
+- Free and open source (MIT). No tracking, no ads, no signup.
+- Country/geo data from DB-IP (CC-BY-4.0).
+
+## How to connect
+
+1. Open the list and pick a proxy near you (sorted fastest-first).
+2. Tap "Connect" — it opens a https://t.me/proxy?server=...&port=...&secret=... link.
+3. Telegram asks to enable the proxy; confirm. All Telegram traffic now routes through it.
+
+## Links
+
+- Website: https://zakky8.github.io/tg-proxy-list/
+- Repository: https://github.com/zakky8/tg-proxy-list
+- Raw proxy list (txt): https://raw.githubusercontent.com/zakky8/tg-proxy-list/main/all_proxies.txt
+- Structured data (JSON): https://raw.githubusercontent.com/zakky8/tg-proxy-list/main/proxies.json
+- Per-country lists: https://github.com/zakky8/tg-proxy-list/tree/main/by_country

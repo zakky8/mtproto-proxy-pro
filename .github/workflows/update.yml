@@ -1,0 +1,61 @@
+name: Update proxies
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"   # every 6 hours
+  workflow_dispatch:           # manual run button
+  push:
+    branches: [main]
+    paths:                     # rebuild lists when the engine or sources change
+      - "cmd/**"
+      - "internal/**"
+      - "sources.txt"
+      - ".github/workflows/update.yml"
+
+permissions:
+  contents: write              # commit refreshed lists back to the repo
+
+concurrency:
+  group: update-proxies
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Cache GeoIP dataset
+        uses: actions/cache@v4
+        with:
+          path: data
+          key: geoip-dbip-country-v1
+
+      - name: Build
+        run: go build -o tgproxy ./cmd/tgproxy
+
+      - name: Collect, verify & publish
+        run: ./tgproxy --concurrency 250 --timeout 6s
+
+      - name: Refresh sitemap lastmod
+        run: |
+          today="$(date -u +%F)"
+          sed -i -E "s#<lastmod>[^<]*</lastmod>#<lastmod>${today}</lastmod>#" docs/sitemap.xml
+
+      - name: Commit refreshed lists
+        run: |
+          git config user.name  "tg-proxy-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            count="$(grep -c . all_proxies.txt || echo 0)"
+            git commit -m "chore: refresh proxy list (${count} verified) [skip ci]"
+            git push
+          fi

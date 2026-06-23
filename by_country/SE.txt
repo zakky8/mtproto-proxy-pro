@@ -1,0 +1,3 @@
+https://t.me/proxy?port=443&secret=780a60fef80f59cab46dbaca44d8da64&server=194.238.57.251
+https://t.me/proxy?port=993&secret=080073892babef5b062caf40c39e8251&server=tg-proxy-2.potokvpn.com
+https://t.me/proxy?port=993&secret=dd080073892babef5b062caf40c39e8251&server=tg-proxy-2.potokvpn.com

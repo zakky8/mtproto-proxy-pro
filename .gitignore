@@ -1,0 +1,14 @@
+# Geo dataset is downloaded fresh on each run (large, redistributed data).
+/data/
+
+# Build artifacts
+/tgproxy
+/tgproxy.exe
+*.tmp
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Local preview/tooling config
+.claude/
